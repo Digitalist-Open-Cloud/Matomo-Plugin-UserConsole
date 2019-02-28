@@ -1,8 +1,8 @@
 <?php
 /**
- * Piwik - free/libre analytics platform
+ * Matomo - free/libre analytics platform
  *
- * @link http://piwik.org
+ * @link https://digitalist.se/contributing-matomo
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 
@@ -15,17 +15,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
 /**
- * This class lets you define a new command. To read more about commands have a look at our Piwik Console guide on
- * http://developer.piwik.org/guides/piwik-on-the-command-line
- *
- * As Piwik Console is based on the Symfony Console you might also want to have a look at
- * http://symfony.com/doc/current/components/console/index.html
+ * Create a user.
  */
 class CreateUser extends ConsoleCommand
 {
     /**
-     * This methods allows you to configure your command. Here you can define the name and description of your command
-     * as well as all options and arguments you expect when executing it.
+     * Options for user creation.
      */
     protected function configure()
     {
