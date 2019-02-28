@@ -1,0 +1,29 @@
+{
+    "name": "UserConsole",
+    "description": "Use the console to manage users",
+    "version": "0.0.1-alpha1",
+    "theme": false,
+    "require": {
+        "piwik": ">=3.8.1-stable,<4.0.0-b1"
+    },
+    "authors": [
+        {
+            "name": "Matomo",
+            "email": "",
+            "homepage": ""
+        }
+    ],
+    "support": {
+        "email": "",
+        "issues": "",
+        "forum": "",
+        "irc": "",
+        "wiki": "",
+        "source": "",
+        "docs": "",
+        "rss": ""
+    },
+    "homepage": "",
+    "license": "GPL v3+",
+    "keywords": []
+}
