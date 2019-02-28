@@ -1,0 +1,27 @@
+{
+  "name": "nodenone/userconsole",
+  "description": "Manage Matomo users with the console",
+  "keywords": [
+    "cli",
+    "install"
+  ],
+  "homepage": "https://github.com/nodeone/userconsole",
+  "version": "0.1-alpha1",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Digitalist",
+      "email": "se.ops@digitalistgroup.com",
+      "homepage": "https://digitalist.se"
+    },
+    {
+      "name": "Mikke Schirén",
+      "email": "mikke.schiren@digitalistgroup.com",
+      "homepage": "https://digitalist.se"
+    }
+  ],
+  "require": {
+    "php": ">=7.1",
+    "piwik/piwik": ">=3.8.0"
+  }
+}

@@ -42,7 +42,8 @@ class ListUsers extends ConsoleCommand
                 $super = " [super user]";
             }
             $user_login = $user['login'];
-            $user_email = $user['email'] ;
+            $user_email = $user['email'];
+
             $message= "Username: <comment>$user_login ($user_email)</comment>$super";
             $output->writeln("<info>$message</info>");
         }
