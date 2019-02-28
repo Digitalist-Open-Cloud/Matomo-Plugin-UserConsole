@@ -48,9 +48,7 @@ class ListUsers extends ConsoleCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $list_of_users = API::getInstance()->getUsers();
-
-
-        var_dump($list_of_users);
+        
         foreach ($list_of_users as $user) {
             $super = false;
             if ($user['superuser_access'] == 1) {
