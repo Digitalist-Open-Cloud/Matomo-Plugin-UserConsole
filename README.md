@@ -6,7 +6,7 @@ This plugin adds the possibility to work with users via console commands.
 
 ## Console commands
 
-* [user:access](#usercreate) 
+* [user:access](#useraccess) 
 * [user:create](#usercreate)
 * [user:delete](#userdelete) 
 * [user:list](#userlist)
