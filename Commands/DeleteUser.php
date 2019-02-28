@@ -58,12 +58,7 @@ class DeleteUser extends ConsoleCommand
         $api = APIUsersManager::getInstance();
 
         if (isset($login)) {
-            $api->deleteUser($login);
-        }
-
-        if (!$api->deleteUser($login)) {
-            $output->writeln("<info>User $login could not be deleted</info>");
-        } else {
+            $delete = $api->deleteUser($login);
             $output->writeln("<info>User $login deleted</info>");
         }
     }

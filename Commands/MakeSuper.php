@@ -21,7 +21,7 @@ use Piwik\Plugins\UsersManager\API as APIUsersManager;
  * As Piwik Console is based on the Symfony Console you might also want to have a look at
  * http://symfony.com/doc/current/components/console/index.html
  */
-class CreateUser extends ConsoleCommand
+class MakeSuper extends ConsoleCommand
 {
     /**
      * This methods allows you to configure your command. Here you can define the name and description of your command
@@ -29,33 +29,13 @@ class CreateUser extends ConsoleCommand
      */
     protected function configure()
     {
-        $this->setName('user:create');
-        $this->setDescription('Create user');
-        $this->addOption(
-            'super',
-            null,
-            InputOption::VALUE_NONE,
-            'Create the user as a super user'
-        );
+        $this->setName('user:make-super');
+        $this->setDescription('Make user a super user');
         $this->addOption(
             'login',
             null,
             InputOption::VALUE_OPTIONAL,
             'User login name',
-            null
-        );
-        $this->addOption(
-            'email',
-            null,
-            InputOption::VALUE_OPTIONAL,
-            'User email',
-            null
-        );
-        $this->addOption(
-            'password',
-            null,
-            InputOption::VALUE_OPTIONAL,
-            'User password',
             null
         );
     }
@@ -65,25 +45,15 @@ class CreateUser extends ConsoleCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $super = $input->getOption('super') ? true : false;
         $login = $input->getOption('login');
-        $email = $input->getOption('email');
-        $password = $input->getOption('password');
-        $api = APIUsersManager::getInstance();
 
-        if (!$api->userExists($login) && !$api->userEmailExists($email)) {
-            $api->addUser(
-                $login,
-                $password,
-                $email
-            );
-            if ($super === true) {
+        $api = APIUsersManager::getInstance();
+        if ($api->userExists($login)) {
                 $api->setSuperUserAccess($login, true);
-            }
         } else {
-            $output->writeln("<error>User with login name $login or/and email $email already exists.</error>");
+            $output->writeln("<error>User $login does not exist.</error>");
             exit;
         }
-        $output->writeln("<info>User $login created</info>");
+        $output->writeln("<info>User $login is now a super user.</info>");
     }
 }
