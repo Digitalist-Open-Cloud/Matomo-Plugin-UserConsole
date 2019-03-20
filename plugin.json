@@ -1,7 +1,7 @@
 {
     "name": "UserConsole",
-    "description": "Use the console to manage users",
-    "version": "0.1.2",
+    "description": "Use the console to manage users, like adding users, reset password etc.",
+    "version": "0.1.3",
     "theme": false,
     "require": {
         "piwik": ">=3.8.0-stable,<4.0.0-b1"

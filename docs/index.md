@@ -12,6 +12,7 @@ This plugin adds the possibility to work with users via console commands.
 * [user:list](#userlist)
 * [user:make-super](#makesuper)
 * [user:remove-super](#removesuper)
+* [user:reset-password](#resetpassword)
 
 ### <a name="usercreate">user:create</a>
 
@@ -66,3 +67,11 @@ List all users.
 
 No options.
 
+### <a name="resetpassword">user:reset-password</a>
+
+Resets password for a user.
+
+Options:
+
+- `login` User name for the user (required)
+- `new-password` New password for the user (required)
