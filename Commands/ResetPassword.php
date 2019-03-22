@@ -17,11 +17,7 @@ use Piwik\Db;
 use Piwik\Common;
 
 /**
- * This class lets you define a new command. To read more about commands have a look at our Piwik Console guide on
- * http://developer.piwik.org/guides/piwik-on-the-command-line
- *
- * As Piwik Console is based on the Symfony Console you might also want to have a look at
- * http://symfony.com/doc/current/components/console/index.html
+ * Resetting password.
  */
 class ResetPassword extends ConsoleCommand
 {
@@ -46,13 +42,13 @@ class ResetPassword extends ConsoleCommand
     }
 
     /**
-     * List users.
+     * Execute the reset password command.
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $login = $input->getOption('login');
         $password = $input->getOption('new-password');
-        
+
         if (isset($login) && isset($password)) {
             $api =  API::getInstance();
             if ($api->userExists($login)) {
@@ -63,7 +59,6 @@ class ResetPassword extends ConsoleCommand
                 $email = $get_user['email'];
                 $sql = "UPDATE `$table` SET `password` =\"$passwordhash\" WHERE `login` = '$login' AND `email` = '$email'";
                 $update = Db::query($sql);
-
                 $output->writeln("<info>User $login new password is set</info>");
             }
         } else {
