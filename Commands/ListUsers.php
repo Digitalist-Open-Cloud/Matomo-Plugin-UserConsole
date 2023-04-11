@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -11,7 +12,6 @@ namespace Piwik\Plugins\UserConsole\Commands;
 use Piwik\Plugin\ConsoleCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Piwik\Plugins\UsersManager\API;
 
 /**
@@ -44,8 +44,9 @@ class ListUsers extends ConsoleCommand
             $user_login = $user['login'];
             $user_email = $user['email'];
 
-            $message= "Username: <comment>$user_login ($user_email)</comment>$super";
+            $message = "Username: <comment>$user_login ($user_email)</comment>$super";
             $output->writeln("<info>$message</info>");
         }
+        return 0;
     }
 }

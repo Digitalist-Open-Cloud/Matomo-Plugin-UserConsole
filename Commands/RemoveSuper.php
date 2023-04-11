@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -55,5 +56,6 @@ class RemoveSuper extends ConsoleCommand
             exit;
         }
         $output->writeln("<info>User $login is no longer a super user.</info>");
+        return 0;
     }
 }

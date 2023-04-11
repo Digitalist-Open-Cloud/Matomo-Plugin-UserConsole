@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -80,5 +81,6 @@ class CreateUser extends ConsoleCommand
             exit;
         }
         $output->writeln("<info>User $login created</info>");
+        return 0;
     }
 }

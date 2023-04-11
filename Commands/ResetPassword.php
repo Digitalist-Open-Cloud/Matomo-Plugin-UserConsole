@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -64,5 +65,6 @@ class ResetPassword extends ConsoleCommand
         } else {
             $output->writeln("<info>You must provide both login and new password to this command.</info>");
         }
+        return 0;
     }
 }

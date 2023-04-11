@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -60,5 +61,6 @@ class DeleteUser extends ConsoleCommand
             $delete = $api->deleteUser($login);
             $output->writeln("<info>User $login deleted</info>");
         }
+        return 0;
     }
 }

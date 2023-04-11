@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -67,5 +68,6 @@ class SetAccess extends ConsoleCommand
             exit;
         }
         $output->writeln("<info>Users $login access has been updated.</info>");
+        return 0;
     }
 }

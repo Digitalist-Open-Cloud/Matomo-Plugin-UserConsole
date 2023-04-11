@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Matomo - free/libre analytics platform
  *
@@ -55,5 +56,6 @@ class MakeSuper extends ConsoleCommand
             exit;
         }
         $output->writeln("<info>User $login is now a super user.</info>");
+        return 0;
     }
 }
