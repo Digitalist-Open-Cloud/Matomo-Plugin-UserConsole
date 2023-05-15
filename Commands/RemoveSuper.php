@@ -32,10 +32,9 @@ class RemoveSuper extends ConsoleCommand
     {
         $this->setName('user:remove-super');
         $this->setDescription('Removes super user privileges');
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
@@ -44,8 +43,10 @@ class RemoveSuper extends ConsoleCommand
     /**
      * Create an user, with option to create super user.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $login = $input->getOption('login');
 
         $api = APIUsersManager::getInstance();
@@ -53,9 +54,9 @@ class RemoveSuper extends ConsoleCommand
             $api->setSuperUserAccess($login, false);
         } else {
             $output->writeln("<error>User $login does not exist.</error>");
-            exit;
+            return self::FAILURE;
         }
         $output->writeln("<info>User $login is no longer a super user.</info>");
-        return 0;
+        return self::SUCCESS;
     }
 }

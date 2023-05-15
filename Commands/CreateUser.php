@@ -10,9 +10,7 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
 /**
@@ -27,30 +25,26 @@ class CreateUser extends ConsoleCommand
     {
         $this->setName('user:create');
         $this->setDescription('Create user');
-        $this->addOption(
+        $this->addNoValueOption(
             'super',
             null,
-            InputOption::VALUE_NONE,
             'Create the user as a super user'
         );
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
-        $this->addOption(
+        $this->addOptionalValueOption(
             'email',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User email',
             null
         );
-        $this->addOption(
+        $this->addOptionalValueOption(
             'password',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User password',
             null
         );
@@ -59,8 +53,10 @@ class CreateUser extends ConsoleCommand
     /**
      * Create an user, with option to create super user.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $super = $input->getOption('super') ? true : false;
         $login = $input->getOption('login');
         $email = $input->getOption('email');
@@ -78,9 +74,9 @@ class CreateUser extends ConsoleCommand
             }
         } else {
             $output->writeln("<error>User with login name $login or/and email $email already exists.</error>");
-            exit;
+            return self::SUCCESS;
         }
         $output->writeln("<info>User $login created</info>");
-        return 0;
+        return self::SUCCESS;
     }
 }

@@ -27,24 +27,21 @@ class SetAccess extends ConsoleCommand
     {
         $this->setName('user:access');
         $this->setDescription('Manage user access');
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
-        $this->addOption(
+        $this->addRequiredValueOption(
             'access',
             null,
-            InputOption::VALUE_REQUIRED,
             'Which access (options: noaccess, view, write, admin)',
             null
         );
-        $this->addOption(
+        $this->addRequiredValueOption(
             'sites',
             null,
-            InputOption::VALUE_REQUIRED,
             'ID(s) of sites, comma separated',
             null
         );
@@ -53,8 +50,10 @@ class SetAccess extends ConsoleCommand
     /**
      * Sets access for a single user.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $login = $input->getOption('login');
         $access = trim($input->getOption('access'));
         $sites = trim($input->getOption('sites'));
@@ -65,9 +64,9 @@ class SetAccess extends ConsoleCommand
             $api->setUserAccess($login, $access, $all_sites);
         } else {
             $output->writeln("<error>User $login does not exist.</error>");
-            exit;
+            return self::FAILURE;
         }
         $output->writeln("<info>Users $login access has been updated.</info>");
-        return 0;
+        return self::SUCCESS;
     }
 }

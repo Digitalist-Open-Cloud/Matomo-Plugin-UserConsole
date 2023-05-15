@@ -10,9 +10,7 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
 /**
@@ -32,10 +30,9 @@ class MakeSuper extends ConsoleCommand
     {
         $this->setName('user:make-super');
         $this->setDescription('Make user a super user');
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
@@ -44,8 +41,10 @@ class MakeSuper extends ConsoleCommand
     /**
      * Create an user, with option to create super user.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $login = $input->getOption('login');
 
         $api = APIUsersManager::getInstance();
@@ -56,6 +55,6 @@ class MakeSuper extends ConsoleCommand
             exit;
         }
         $output->writeln("<info>User $login is now a super user.</info>");
-        return 0;
+        return self::SUCCESS;
     }
 }

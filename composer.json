@@ -6,7 +6,7 @@
     "install"
   ],
   "homepage": "https://digitalist.se/contributing-matomo",
-  "version": "4.0.1",
+  "version": "5.0.0",
   "license": "GPL-3.0-or-later",
   "authors": [
     {
@@ -21,7 +21,6 @@
     }
   ],
   "require": {
-    "php": ">=7.2",
-    "matomo/matomo": ">=3.8.0"
+    "php": ">=7.2"
   }
 }

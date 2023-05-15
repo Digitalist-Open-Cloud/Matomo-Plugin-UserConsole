@@ -10,8 +10,6 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Piwik\Plugins\UsersManager\API;
 use Piwik\Db;
@@ -26,17 +24,15 @@ class ResetPassword extends ConsoleCommand
     {
         $this->setName('user:reset-password');
         $this->setDescription('Reset password for an user');
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
-        $this->addOption(
+        $this->addOptionalValueOption(
             'new-password',
             null,
-            InputOption::VALUE_OPTIONAL,
             'New password for the user',
             null
         );
@@ -45,8 +41,10 @@ class ResetPassword extends ConsoleCommand
     /**
      * Execute the reset password command.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $login = $input->getOption('login');
         $password = $input->getOption('new-password');
 
@@ -65,6 +63,6 @@ class ResetPassword extends ConsoleCommand
         } else {
             $output->writeln("<info>You must provide both login and new password to this command.</info>");
         }
-        return 0;
+        return self::SUCCESS;
     }
 }

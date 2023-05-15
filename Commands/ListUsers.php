@@ -10,8 +10,6 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API;
 
 /**
@@ -32,8 +30,10 @@ class ListUsers extends ConsoleCommand
     /**
      * List users.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $list_of_users = API::getInstance()->getUsers();
 
         foreach ($list_of_users as $user) {
@@ -47,6 +47,6 @@ class ListUsers extends ConsoleCommand
             $message = "Username: <comment>$user_login ($user_email)</comment>$super";
             $output->writeln("<info>$message</info>");
         }
-        return 0;
+        return self::SUCCESS;
     }
 }

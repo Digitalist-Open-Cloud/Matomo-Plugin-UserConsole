@@ -10,9 +10,7 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
 /**
@@ -32,10 +30,9 @@ class DeleteUser extends ConsoleCommand
     {
         $this->setName('user:delete');
         $this->setDescription('Delete user');
-        $this->addOption(
+        $this->addOptionalValueOption(
             'login',
             null,
-            InputOption::VALUE_OPTIONAL,
             'User login name',
             null
         );
@@ -52,8 +49,10 @@ class DeleteUser extends ConsoleCommand
      *
      * Execute the command like: ./console userconsole:list-users --name="The Piwik Team"
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function doExecute(): int
     {
+        $input = $this->getInput();
+        $output = $this->getOutput();
         $login = $input->getOption('login');
         $api = APIUsersManager::getInstance();
 
@@ -61,6 +60,6 @@ class DeleteUser extends ConsoleCommand
             $delete = $api->deleteUser($login);
             $output->writeln("<info>User $login deleted</info>");
         }
-        return 0;
+        return self::SUCCESS;
     }
 }
