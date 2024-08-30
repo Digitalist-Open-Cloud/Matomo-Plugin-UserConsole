@@ -1,12 +1,12 @@
 {
-  "name": "nodenone/userconsole",
+  "name": "digitalist/userconsole",
   "description": "Manage Matomo users with the console",
   "keywords": [
     "cli",
     "install"
   ],
   "homepage": "https://digitalist.se/contributing-matomo",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "license": "GPL-3.0-or-later",
   "authors": [
     {

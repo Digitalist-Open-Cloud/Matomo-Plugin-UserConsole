@@ -1,7 +1,7 @@
 {
     "name": "UserConsole",
     "description": "Use the console to manage users, like adding users, reset password etc.",
-    "version": "5.0.1",
+    "version": "5.0.2",
     "theme": false,
     "require": {
         "matomo": ">=5.0.0-b1,<6.0.0-b1"
@@ -16,7 +16,7 @@
     "support": {
         "issues": "https://github.com/nodeone/userconsole/issues"
     },
-    "homepage": "https://digitalist.se/contributing-matomo",
+    "homepage": "https://digitalist.cloud",
     "license": "GPL v3+",
     "keywords": []
 }

@@ -1,3 +1,7 @@
-## Changelog
+# Change log
 
-Here goes the changelog text.
+## [5.0.2] - 2024-08-30
+
+### Added
+
+- Cover for Marketplace
