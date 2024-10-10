@@ -1,7 +1,7 @@
 {
     "name": "UserConsole",
     "description": "Use the console to manage users, like adding users, reset password etc.",
-    "version": "5.0.2",
+    "version": "5.0.3",
     "theme": false,
     "require": {
         "matomo": ">=5.0.0-b1,<6.0.0-b1"
@@ -9,12 +9,12 @@
     "authors": [
         {
             "name": "Mikke Schirén",
-            "email": "mikke.schiren@digitalistgroup.com",
-            "homepage": "https://digitalist.se"
+            "email": "mikke.schiren@digitalist.com",
+            "homepage": "https://digitalist.cloud"
         }
     ],
     "support": {
-        "issues": "https://github.com/nodeone/userconsole/issues"
+        "issues": "https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/issues"
     },
     "homepage": "https://digitalist.cloud",
     "license": "GPL v3+",
