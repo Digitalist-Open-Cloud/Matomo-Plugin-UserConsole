@@ -6,9 +6,10 @@ This plugin adds the possibility to work with users via console commands.
 
 ## Console commands
 
-* [user:access](#useraccess) 
+* [user:access](#useraccess)
 * [user:create](#usercreate)
-* [user:delete](#userdelete) 
+* [user:invite](#userinvite)
+* [user:delete](#userdelete)
 * [user:list](#userlist)
 * [user:make-super](#makesuper)
 * [user:remove-super](#removesuper)
@@ -25,11 +26,22 @@ Options:
 * `password` Password for the user (required)
 * `super` Add super user privileges to the user (optional)
 
+### <a name="userinvite">user:invite</a>
+
+Invites a user.
+
+Options:
+
+* `login` User name for the user (required)
+* `email` Email for the user (required)
+* `site` ID of the initial site (required)
+* `expiry` Expiry in days (optional)
+
 ### <a name="userdelete">user:delete</a>
 
-Deletes a user. 
+Deletes a user.
 
-Options: 
+Options:
 
 * `login` User name for the user (required)
 
