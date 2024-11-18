@@ -5,19 +5,19 @@
     "cli",
     "install"
   ],
-  "homepage": "https://digitalist.se/contributing-matomo",
-  "version": "5.0.2",
+  "homepage": "https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole",
+  "version": "5.0.4",
   "license": "GPL-3.0-or-later",
   "authors": [
     {
       "name": "Digitalist",
-      "email": "se.ops@digitalistgroup.com",
-      "homepage": "https://digitalist.se"
+      "email": "cloud@digitalist.com",
+      "homepage": "https://digitalist.cloud"
     },
     {
       "name": "Mikke Schirén",
-      "email": "mikke.schiren@digitalistgroup.com",
-      "homepage": "https://digitalist.se"
+      "email": "mikke.schiren@digitalist.com",
+      "homepage": "https://digitalist.cloud"
     }
   ],
   "require": {
