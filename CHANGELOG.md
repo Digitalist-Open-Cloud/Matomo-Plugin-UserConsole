@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [5.0.5] - 2026-11-21
 
 ### Security
 
