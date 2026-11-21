@@ -9,17 +9,9 @@
 
 namespace Piwik\Plugins\UserConsole\Commands;
 
-use Piwik\Plugin\ConsoleCommand;
-use Piwik\Plugins\UsersManager\API;
+use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
-/**
- * This class lets you define a new command. To read more about commands have a look at our Piwik Console guide on
- * http://developer.piwik.org/guides/piwik-on-the-command-line
- *
- * As Piwik Console is based on the Symfony Console you might also want to have a look at
- * http://symfony.com/doc/current/components/console/index.html
- */
-class ListUsers extends ConsoleCommand
+class ListUsers extends UserCommand
 {
     protected function configure()
     {
@@ -27,26 +19,14 @@ class ListUsers extends ConsoleCommand
         $this->setDescription('List users');
     }
 
-    /**
-     * List users.
-     */
-    protected function doExecute(): int
+    protected function executeForUsers(): string
     {
-        $input = $this->getInput();
-        $output = $this->getOutput();
-        $list_of_users = API::getInstance()->getUsers();
-
-        foreach ($list_of_users as $user) {
-            $super = false;
-            if ($user['superuser_access'] == 1) {
-                $super = " [super user]";
-            }
-            $user_login = $user['login'];
-            $user_email = $user['email'];
-
-            $message = "Username: <comment>$user_login ($user_email)</comment>$super";
-            $output->writeln("<info>$message</info>");
+        $lines = [];
+        foreach (APIUsersManager::getInstance()->getUsers() as $user) {
+            $super = $user['superuser_access'] == 1 ? ' [super user]' : '';
+            $lines[] = "Username: <comment>{$user['login']} ({$user['email']})</comment>$super";
         }
-        return self::SUCCESS;
+
+        return implode("\n", $lines);
     }
 }

@@ -9,64 +9,30 @@
 
 namespace Piwik\Plugins\UserConsole\Commands;
 
-use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
-/**
- * Working with access for users.
- */
-class SetAccess extends ConsoleCommand
+class SetAccess extends UserCommand
 {
-    /**
-     * Configure options.
-     */
     protected function configure()
     {
         $this->setName('user:access');
         $this->setDescription('Manage user access');
-        $this->addOptionalValueOption(
-            'login',
-            null,
-            'User login name',
-            null
-        );
-        $this->addRequiredValueOption(
-            'access',
-            null,
-            'Which access (options: noaccess, view, write, admin)',
-            null
-        );
-        $this->addRequiredValueOption(
-            'sites',
-            null,
-            'ID(s) of sites, comma separated',
-            null
-        );
+        $this->addRequiredValueOption('login', null, 'User login name');
+        $this->addRequiredValueOption('access', null, 'Which access (options: noaccess, view, write, admin)');
+        $this->addRequiredValueOption('sites', null, 'ID(s) of sites, comma separated, or "all"');
     }
 
-    /**
-     * Sets access for a single user.
-     */
-    protected function doExecute(): int
+    protected function executeForUsers(): string
     {
-        $input = $this->getInput();
-        $output = $this->getOutput();
-        $login = $input->getOption('login');
-        $access = trim($input->getOption('access'));
-        $sites = trim($input->getOption('sites'));
-        $all_sites = explode(",", $sites);
-
-        $api = APIUsersManager::getInstance();
-        if ($api->userExists($login)) {
-            $api->setUserAccess($login, $access, $all_sites);
-        } else {
-            $output->writeln("<error>User $login does not exist.</error>");
-            return self::FAILURE;
+        $login = $this->getLoginOfExistingUser();
+        $access = $this->getRequiredOption('access');
+        $sites = $this->getRequiredOption('sites');
+        if ($sites !== 'all') {
+            $sites = array_values(array_filter(array_map('intval', explode(',', $sites))));
         }
-        $output->writeln("<info>Users $login access has been updated.</info>");
-        return self::SUCCESS;
+
+        APIUsersManager::getInstance()->setUserAccess($login, $access, $sites);
+
+        return "Users $login access has been updated.";
     }
 }

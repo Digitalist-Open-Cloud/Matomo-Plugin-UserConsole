@@ -1,0 +1,19 @@
+name: Semgrep OSS scan
+
+on:
+  pull_request: {}
+  workflow_dispatch: {}
+  push:
+    branches: ["5.x-dev"]
+
+jobs:
+  semgrep:
+    name: semgrep-oss/scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    # Dependabot pull requests lack the permissions the scan needs.
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v7
+      - run: semgrep scan --config auto

@@ -17,6 +17,6 @@
         "issues": "https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/issues"
     },
     "homepage": "https://digitalist.cloud",
-    "license": "GPL v3+",
+    "license": "GPL-3.0-or-later",
     "keywords": []
 }
