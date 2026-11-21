@@ -26,10 +26,7 @@ class SetAccess extends UserCommand
     {
         $login = $this->getLoginOfExistingUser();
         $access = $this->getRequiredOption('access');
-        $sites = $this->getRequiredOption('sites');
-        if ($sites !== 'all') {
-            $sites = array_values(array_filter(array_map('intval', explode(',', $sites))));
-        }
+        $sites = $this->getSites();
 
         APIUsersManager::getInstance()->setUserAccess($login, $access, $sites);
 

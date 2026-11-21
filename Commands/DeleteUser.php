@@ -18,11 +18,18 @@ class DeleteUser extends UserCommand
         $this->setName('user:delete');
         $this->setDescription('Delete user');
         $this->addRequiredValueOption('login', null, 'User login name');
+        $this->addNoValueOption('force', null, 'Do not ask before deleting');
     }
 
     protected function executeForUsers(): string
     {
         $login = $this->getLoginOfExistingUser();
+
+        // A script has nobody to answer, so only a person at a terminal is asked.
+        $ask = $this->getInput()->isInteractive() && !$this->getInput()->getOption('force');
+        if ($ask && !$this->askForConfirmation("Delete the user $login? (y/N) ", false)) {
+            return "User $login was not deleted";
+        }
 
         APIUsersManager::getInstance()->deleteUser($login);
 
