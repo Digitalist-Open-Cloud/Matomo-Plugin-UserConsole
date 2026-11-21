@@ -4,6 +4,7 @@ namespace Piwik\Plugins\UserConsole\tests\Integration;
 
 use Piwik\Access;
 use Piwik\Common;
+use Piwik\Date;
 use Piwik\Db;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 use Piwik\Plugins\UsersManager\Model;
@@ -39,7 +40,7 @@ class CommandsTest extends ConsoleCommandTestCase
         });
 
         // The database is not reset between the tests of a console command.
-        foreach (['user', 'access'] as $table) {
+        foreach (['user', 'access', 'user_token_auth'] as $table) {
             Db::query('DELETE FROM ' . Common::prefixTable($table) . ' WHERE login NOT IN (?, ?)', ['anonymous', Fixture::ADMIN_USER_LOGIN]);
         }
     }
@@ -236,9 +237,356 @@ class CommandsTest extends ConsoleCommandTestCase
         $this->assertNotEmpty($this->getUser('anna')['invite_token']);
     }
 
+    public function testTokenCreatePrintsATokenThatAuthenticatesTheUser()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer']));
+
+        $token = trim($this->getDisplay());
+        $this->assertSame('anna', (new Model())->getUserByTokenAuth($token)['login']);
+    }
+
+    public function testTokenCreateKeepsTheExpireDateAndSecureOnly()
+    {
+        $this->addUser('anna');
+        $date = date('Y-m-d', strtotime('+30 days'));
+
+        $this->assertSame(0, $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer', '--expire-date' => $date, '--secure-only' => true]));
+
+        $token = (new Model())->getAllNonSystemTokensForLogin('anna')[0];
+        $this->assertStringStartsWith($date, $token['date_expired']);
+        $this->assertSame('1', (string) $token['secure_only']);
+    }
+
+    /**
+     * @dataProvider getBadExpireDates
+     */
+    public function testTokenCreateRefusesAnExpireDateThatIsNotALaterDay(string $date)
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer', '--expire-date' => $date]));
+
+        $this->assertStringContainsString('--expire-date', $this->getDisplay());
+        $this->assertSame([], (new Model())->getAllNonSystemTokensForLogin('anna'));
+    }
+
+    public function getBadExpireDates(): array
+    {
+        return [['2020-01-01'], ['tomorrow'], ['2099-02-31']];
+    }
+
+    public function testTokenCreateFailsWithoutADescriptionOrForAnUnknownUser()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:token-create', ['--login' => 'anna']));
+        $this->assertSame(1, $this->runCommand('user:token-create', ['--login' => 'nobody', '--description' => 'importer']));
+    }
+
+    public function testTokenListShowsTheTokensOfTheUserOnlyAndNotTheirSecrets()
+    {
+        $this->addUser('anna');
+        $this->addUser('bertil');
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer']);
+        $token = trim($this->getDisplay());
+        $this->runCommand('user:token-create', ['--login' => 'bertil', '--description' => 'dashboard']);
+
+        $this->assertSame(0, $this->runCommand('user:token-list', ['--login' => 'anna']));
+
+        $this->assertStringContainsString('importer', $this->getDisplay());
+        $this->assertStringNotContainsString('dashboard', $this->getDisplay());
+        $this->assertStringNotContainsString($token, $this->getDisplay());
+        $this->assertStringNotContainsString((new Model())->hashTokenAuth($token), $this->getDisplay());
+    }
+
+    public function testTokenDeleteRemovesTheGivenTokenOnly()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer']);
+        $deleted = trim($this->getDisplay());
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'dashboard']);
+        $kept = trim($this->getDisplay());
+        $model = new Model();
+        $id = $model->getAllNonSystemTokensForLogin('anna')[0]['idusertokenauth'];
+
+        $this->assertSame(0, $this->runCommand('user:token-delete', ['--login' => 'anna', '--id' => $id]));
+
+        $this->assertEmpty($model->getUserByTokenAuth($deleted));
+        $this->assertNotEmpty($model->getUserByTokenAuth($kept));
+    }
+
+    public function testTokenDeleteCannotRemoveTheTokenOfAnotherUser()
+    {
+        $this->addUser('anna');
+        $this->addUser('bertil');
+        $this->runCommand('user:token-create', ['--login' => 'bertil', '--description' => 'dashboard']);
+        $model = new Model();
+        $id = $model->getAllNonSystemTokensForLogin('bertil')[0]['idusertokenauth'];
+
+        $this->assertSame(1, $this->runCommand('user:token-delete', ['--login' => 'anna', '--id' => $id]));
+
+        $this->assertCount(1, $model->getAllNonSystemTokensForLogin('bertil'));
+    }
+
+    public function testTokenDeleteAllRemovesEveryTokenOfTheUser()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer']);
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'dashboard']);
+
+        $this->assertSame(0, $this->runCommand('user:token-delete', ['--login' => 'anna', '--all' => true]));
+
+        $this->assertSame([], (new Model())->getAllNonSystemTokensForLogin('anna'));
+    }
+
+    public function testTokenDeleteFailsWithoutAnIdOrAll()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:token-delete', ['--login' => 'anna']));
+    }
+
+    public function testCreateWithUpdateBringsAnExistingUserInLine()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:create', ['--login' => 'anna', '--email' => 'new@example.org', '--password' => 'another-long-secret-2', '--super' => true, '--update' => true]));
+
+        $user = $this->getUser('anna');
+        $this->assertSame('new@example.org', $user['email']);
+        $this->assertSame('1', (string) $user['superuser_access']);
+        $this->assertTrue($this->isPassword('anna', 'another-long-secret-2'));
+    }
+
+    public function testCreateWithUpdateTakesSuperUserAccessAwayWhenNotAskedFor()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:make-super', ['--login' => 'anna']);
+
+        $this->assertSame(0, $this->runCommand('user:create', ['--login' => 'anna', '--email' => 'anna@example.org', '--password' => self::PASSWORD, '--update' => true]));
+
+        $this->assertSame('0', (string) $this->getUser('anna')['superuser_access']);
+    }
+
+    public function testCreateWithUpdateKeepsTheUserLoggedInWhenNothingDiffers()
+    {
+        $this->addUser('anna');
+        $before = $this->getUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:create', ['--login' => 'anna', '--email' => 'anna@example.org', '--password' => self::PASSWORD, '--update' => true]));
+
+        $this->assertStringContainsString('Nothing was changed', $this->getDisplay());
+        $this->assertSame($before, $this->getUser('anna'));
+    }
+
+    public function testCreateWithUpdateAddsAUserThatDoesNotExist()
+    {
+        $this->assertSame(0, $this->runCommand('user:create', ['--login' => 'anna', '--email' => 'anna@example.org', '--password' => self::PASSWORD, '--update' => true]));
+
+        $this->assertTrue($this->isPassword('anna', self::PASSWORD));
+    }
+
+    public function testUpdateChangesTheEmailAndKeepsThePassword()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:update', ['--login' => 'anna', '--email' => 'new@example.org']));
+
+        $this->assertSame('new@example.org', $this->getUser('anna')['email']);
+        $this->assertTrue($this->isPassword('anna', self::PASSWORD));
+    }
+
+    public function testUpdateRefusesAnEmailOfAnotherUserAndOneThatIsNotAnEmail()
+    {
+        $this->addUser('anna');
+        $this->addUser('bertil');
+
+        $this->assertSame(1, $this->runCommand('user:update', ['--login' => 'anna', '--email' => 'bertil@example.org']));
+        $this->assertSame(1, $this->runCommand('user:update', ['--login' => 'anna', '--email' => 'not-an-email']));
+
+        $this->assertSame('anna@example.org', $this->getUser('anna')['email']);
+    }
+
+    public function testLogoutEndsTheSessionsOfTheUserAndKeepsPasswordAndTokens()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'importer']);
+        $token = trim($this->getDisplay());
+        $sessionStart = time() - 3600;
+        Db::query('UPDATE ' . Common::prefixTable('user') . ' SET ts_password_modified = ? WHERE login = ?', ['2020-01-01 00:00:00', 'anna']);
+
+        $this->assertSame(0, $this->runCommand('user:logout', ['--login' => 'anna']));
+
+        // Matomo ends a session that started before this time.
+        $this->assertGreaterThan($sessionStart, Date::factory($this->getUser('anna')['ts_password_modified'])->getTimestampUTC());
+        $this->assertTrue($this->isPassword('anna', self::PASSWORD));
+        $this->assertNotEmpty((new Model())->getUserByTokenAuth($token));
+    }
+
+    public function testListAsJsonTellsAccessSuperUserAndInvitation()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'write', '--sites' => '2']);
+        $this->runCommand('user:invite', ['--login' => 'bertil', '--email' => 'bertil@example.org', '--site' => '1']);
+
+        $this->assertSame(0, $this->runCommand('user:list', ['--format' => 'json']));
+
+        $users = array_column(json_decode($this->getDisplay(), true, 512, JSON_THROW_ON_ERROR), null, 'login');
+        $this->assertSame('anna@example.org', $users['anna']['email']);
+        $this->assertFalse($users['anna']['superuser']);
+        $this->assertSame('active', $users['anna']['invite']);
+        $this->assertEquals([['site' => 2, 'access' => 'write']], $users['anna']['access']);
+        $this->assertSame('pending', $users['bertil']['invite']);
+        $this->assertTrue($users[Fixture::ADMIN_USER_LOGIN]['superuser']);
+        $this->assertArrayNotHasKey('password', $users['anna']);
+    }
+
+    public function testListFailsForAFormatItDoesNotKnow()
+    {
+        $this->assertSame(1, $this->runCommand('user:list', ['--format' => 'xml']));
+    }
+
+    public function testTokenListAsJsonKeepsADescriptionThatLooksLikeAConsoleStyle()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'the <info>importer</info>', '--secure-only' => true]);
+
+        $this->assertSame(0, $this->runCommand('user:token-list', ['--login' => 'anna', '--format' => 'json']));
+
+        $tokens = json_decode($this->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertCount(1, $tokens);
+        $this->assertSame('the <info>importer</info>', $tokens[0]['description']);
+        $this->assertTrue($tokens[0]['secure_only']);
+        $this->assertSame(['id', 'description', 'date_created', 'last_used', 'date_expired', 'secure_only'], array_keys($tokens[0]));
+    }
+
+    public function testDeleteAsksAPersonAndKeepsTheUserOnNo()
+    {
+        $this->addUser('anna');
+        $this->applicationTester->setInputs(["n\n"]);
+
+        $this->assertSame(0, $this->applicationTester->run(['command' => 'user:delete', '--login' => 'anna'], ['interactive' => true]));
+
+        $this->assertStringContainsString('was not deleted', $this->getDisplay());
+        $this->assertNotNull($this->getUser('anna'));
+    }
+
+    public function testDeleteAsksAPersonAndDeletesOnYes()
+    {
+        $this->addUser('anna');
+        $this->applicationTester->setInputs(["y\n"]);
+
+        $this->assertSame(0, $this->applicationTester->run(['command' => 'user:delete', '--login' => 'anna'], ['interactive' => true]));
+
+        $this->assertNull($this->getUser('anna'));
+    }
+
+    public function testDeleteWithForceDoesNotAsk()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->applicationTester->run(['command' => 'user:delete', '--login' => 'anna', '--force' => true], ['interactive' => true]));
+
+        $this->assertNull($this->getUser('anna'));
+    }
+
+    public function testInviteResendGivesThePendingUserANewInvitation()
+    {
+        $this->runCommand('user:invite', ['--login' => 'anna', '--email' => 'anna@example.org', '--site' => '1']);
+        $before = $this->getUser('anna')['invite_token'];
+
+        $this->assertSame(0, $this->runCommand('user:invite-resend', ['--login' => 'anna']));
+
+        $after = $this->getUser('anna')['invite_token'];
+        $this->assertNotEmpty($after);
+        $this->assertNotSame($before, $after);
+    }
+
+    public function testInviteResendFailsForAUserThatIsNotWaitingToAccept()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:invite-resend', ['--login' => 'anna']));
+
+        $this->assertStringContainsString('no invitation', $this->getDisplay());
+    }
+
+    public function testListMarksUsersThatHaveNotAcceptedTheirInvitation()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:invite', ['--login' => 'bertil', '--email' => 'bertil@example.org', '--site' => '1']);
+
+        $this->runCommand('user:list', []);
+
+        $this->assertRegExp('/bertil .*\[invitation pending\]/', $this->getDisplay());
+        $this->assertNotRegExp('/anna .*invitation/', $this->getDisplay());
+    }
+
+    public function testShowTellsAboutOneUser()
+    {
+        $this->addUser('anna');
+        $this->addUser('bertil');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'write', '--sites' => '2']);
+
+        $this->assertSame(0, $this->runCommand('user:show', ['--login' => 'anna']));
+
+        $this->assertStringContainsString('anna@example.org', $this->getDisplay());
+        $this->assertStringContainsString('Website 2: write', $this->getDisplay());
+        $this->assertStringNotContainsString('bertil', $this->getDisplay());
+    }
+
+    public function testShowAsJsonHasTheSameFieldsAsTheList()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:show', ['--login' => 'anna', '--format' => 'json']));
+        $user = json_decode($this->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+        $this->runCommand('user:list', ['--format' => 'json']);
+        $users = array_column(json_decode($this->getDisplay(), true, 512, JSON_THROW_ON_ERROR), null, 'login');
+
+        $this->assertSame('anna', $user['login']);
+        $this->assertSame($users['anna'], $user);
+    }
+
+    public function testShowFailsForAUserThatDoesNotExist()
+    {
+        $this->assertSame(1, $this->runCommand('user:show', ['--login' => 'nobody']));
+    }
+
+    public function testCapabilityIsGivenAndTakenAwayOnTheGivenWebsites()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'view', '--sites' => '1,2']);
+
+        $this->assertSame(0, $this->runCommand('user:capability', ['--login' => 'anna', '--capability' => 'tagmanager_write', '--sites' => '2']));
+        $this->assertEquals(['view'], $this->getAccess('anna', 1));
+        $this->assertEqualsCanonicalizing(['view', 'tagmanager_write'], $this->getAccess('anna', 2));
+
+        $this->assertSame(0, $this->runCommand('user:capability', ['--login' => 'anna', '--capability' => 'tagmanager_write', '--sites' => '2', '--remove' => true]));
+        $this->assertEquals(['view'], $this->getAccess('anna', 2));
+    }
+
+    public function testCapabilityFailsForOneMatomoDoesNotKnow()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'view', '--sites' => '1']);
+
+        $this->assertSame(1, $this->runCommand('user:capability', ['--login' => 'anna', '--capability' => 'admin', '--sites' => '1']));
+        $this->assertStringContainsString('tagmanager_write', $this->getDisplay());
+
+        $this->assertEquals(['view'], $this->getAccess('anna', 1));
+    }
+
+    private function getAccess(string $login, int $idSite): array
+    {
+        return Db::get()->fetchCol('SELECT access FROM ' . Common::prefixTable('access') . ' WHERE login = ? AND idsite = ?', [$login, $idSite]);
+    }
+
     private function runCommand(string $command, array $options): int
     {
-        return $this->applicationTester->run(['command' => $command] + $options);
+        return $this->applicationTester->run(['command' => $command] + $options, ['interactive' => false]);
     }
 
     private function getDisplay(): string

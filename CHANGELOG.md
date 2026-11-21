@@ -15,6 +15,17 @@
 
 ### Added
 
+- `user:token-create`, `user:token-list` and `user:token-delete` to manage the API tokens of a user.
+- `user:list --format=json`, with the access per website, super user access, invitation and last seen. `user:token-list` has the same option.
+- `user:update` to change the email of a user, and `user:create --update` to bring an existing user in line with what was asked for.
+- `user:logout` to log a user out everywhere.
+- `user:show` to see one user with its access.
+- `user:invite-resend` to send an invitation again. `user:list` marks users that have not accepted their invitation.
+- `user:capability` to give or take away capabilities on websites.
+
+### Changed
+
+- `user:delete` asks before deleting when run at a terminal. `--force` skips the question, and scripts are not asked.
 - Tests, and workflows that run them, PHPCS and Semgrep.
 
 ## [5.0.4] - 2024-11-18

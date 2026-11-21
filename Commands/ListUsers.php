@@ -17,14 +17,23 @@ class ListUsers extends UserCommand
     {
         $this->setName('user:list');
         $this->setDescription('List users');
+        $this->addFormatOption();
     }
 
     protected function executeForUsers(): string
     {
+        $users = APIUsersManager::getInstance()->getUsers();
+
+        if ($this->isJsonWanted()) {
+            return $this->toJson(array_map([$this, 'describeUser'], $users));
+        }
+
         $lines = [];
-        foreach (APIUsersManager::getInstance()->getUsers() as $user) {
+        foreach ($users as $user) {
             $super = $user['superuser_access'] == 1 ? ' [super user]' : '';
-            $lines[] = "Username: <comment>{$user['login']} ({$user['email']})</comment>$super";
+            $invite = $this->describeUser($user)['invite'];
+            $invite = $invite === 'active' ? '' : " [invitation $invite]";
+            $lines[] = "Username: <comment>{$user['login']} ({$user['email']})</comment>$super$invite";
         }
 
         return implode("\n", $lines);
