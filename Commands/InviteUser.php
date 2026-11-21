@@ -9,70 +9,35 @@
 
 namespace Piwik\Plugins\UserConsole\Commands;
 
-use Piwik\Plugin\ConsoleCommand;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 
-/**
- * Invite a user.
- */
-class InviteUser extends ConsoleCommand
+class InviteUser extends UserCommand
 {
-    /**
-     * Options for user creation.
-     */
     protected function configure()
     {
         $this->setName('user:invite');
         $this->setDescription('Invite user');
-        $this->addRequiredValueOption(
-            'login',
-            null,
-            'User login name',
-            null
-        );
-        $this->addRequiredValueOption(
-            'email',
-            null,
-            'User email',
-            null
-        );
-        $this->addRequiredValueOption(
-            'site',
-            null,
-            'ID of the initial site',
-            null
-        );
-        $this->addOptionalValueOption(
-            'expiry',
-            null,
-            'Expiry in days',
-            null
-        );
+        $this->addRequiredValueOption('login', null, 'User login name');
+        $this->addRequiredValueOption('email', null, 'User email');
+        $this->addRequiredValueOption('site', null, 'ID of the initial site');
+        $this->addOptionalValueOption('expiry', null, 'Expiry in days');
     }
 
-    /**
-     * Create an user, with option to create super user.
-     */
-    protected function doExecute(): int
+    protected function executeForUsers(): string
     {
-        $input = $this->getInput();
-        $output = $this->getOutput();
-        $login = $input->getOption('login');
-        $email = $input->getOption('email');
-        $site = $input->getOption('site');
-        $expiry = $input->getOption('expiry');
+        $login = $this->getRequiredOption('login');
+        $email = $this->getRequiredOption('email');
+        $site = (int) $this->getRequiredOption('site');
+        $expiry = $this->getInput()->getOption('expiry');
+
         $api = APIUsersManager::getInstance();
-
         if ($api->userExists($login) || $api->userEmailExists($email)) {
-            $output->writeln("<error>User with login name $login or/and email $email already exists.</error>");
-
-            return self::SUCCESS;
+            // Not a failure, so that a setup can be run again.
+            return "User with login name $login or/and email $email already exists. Nothing was changed.";
         }
 
         $api->inviteUser($login, $email, $site, $expiry);
 
-        $output->writeln("<info>User $login invited</info>");
-
-        return self::SUCCESS;
+        return "User $login invited";
     }
 }

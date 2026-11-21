@@ -9,74 +9,38 @@
 
 namespace Piwik\Plugins\UserConsole\Commands;
 
-use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputOption;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
+use Piwik\Plugins\UsersManager\UserUpdater;
 
-/**
- * Create a user.
- */
-class CreateUser extends ConsoleCommand
+class CreateUser extends UserCommand
 {
-    /**
-     * Options for user creation.
-     */
     protected function configure()
     {
         $this->setName('user:create');
         $this->setDescription('Create user');
-        $this->addNoValueOption(
-            'super',
-            null,
-            'Create the user as a super user'
-        );
-        $this->addOptionalValueOption(
-            'login',
-            null,
-            'User login name',
-            null
-        );
-        $this->addOptionalValueOption(
-            'email',
-            null,
-            'User email',
-            null
-        );
-        $this->addOptionalValueOption(
-            'password',
-            null,
-            'User password',
-            null
-        );
+        $this->addNoValueOption('super', null, 'Create the user as a super user');
+        $this->addRequiredValueOption('login', null, 'User login name');
+        $this->addRequiredValueOption('email', null, 'User email');
+        $this->addRequiredValueOption('password', null, 'User password');
     }
 
-    /**
-     * Create an user, with option to create super user.
-     */
-    protected function doExecute(): int
+    protected function executeForUsers(): string
     {
-        $input = $this->getInput();
-        $output = $this->getOutput();
-        $super = $input->getOption('super') ? true : false;
-        $login = $input->getOption('login');
-        $email = $input->getOption('email');
-        $password = $input->getOption('password');
-        $api = APIUsersManager::getInstance();
+        $login = $this->getRequiredOption('login');
+        $email = $this->getRequiredOption('email');
+        $password = $this->getRequiredOption('password');
 
-        if (!$api->userExists($login) && !$api->userEmailExists($email)) {
-            $api->addUser(
-                $login,
-                $password,
-                $email
-            );
-            if ($super === true) {
-                $api->setSuperUserAccess($login, true);
-            }
-        } else {
-            $output->writeln("<error>User with login name $login or/and email $email already exists.</error>");
-            return self::SUCCESS;
+        $api = APIUsersManager::getInstance();
+        if ($api->userExists($login) || $api->userEmailExists($email)) {
+            // Not a failure, so that a setup can be run again.
+            return "User with login name $login or/and email $email already exists. Nothing was changed.";
         }
-        $output->writeln("<info>User $login created</info>");
-        return self::SUCCESS;
+
+        $api->addUser($login, $password, $email);
+        if ($this->getInput()->getOption('super')) {
+            (new UserUpdater())->setSuperUserAccessWithoutCurrentPassword($login, 1);
+        }
+
+        return "User $login created";
     }
 }

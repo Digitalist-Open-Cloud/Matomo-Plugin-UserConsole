@@ -9,52 +9,24 @@
 
 namespace Piwik\Plugins\UserConsole\Commands;
 
-use Piwik\Plugin\ConsoleCommand;
-use Symfony\Component\Console\Input\InputOption;
-use Piwik\Plugins\UsersManager\API as APIUsersManager;
+use Piwik\Plugins\UsersManager\UserUpdater;
 
-/**
- * This class lets you define a new command. To read more about commands have a look at our Piwik Console guide on
- * http://developer.piwik.org/guides/piwik-on-the-command-line
- *
- * As Piwik Console is based on the Symfony Console you might also want to have a look at
- * http://symfony.com/doc/current/components/console/index.html
- */
-class MakeSuper extends ConsoleCommand
+class MakeSuper extends UserCommand
 {
-    /**
-     * This methods allows you to configure your command. Here you can define the name and description of your command
-     * as well as all options and arguments you expect when executing it.
-     */
     protected function configure()
     {
         $this->setName('user:make-super');
         $this->setDescription('Make user a super user');
-        $this->addOptionalValueOption(
-            'login',
-            null,
-            'User login name',
-            null
-        );
+        $this->addRequiredValueOption('login', null, 'User login name');
     }
 
-    /**
-     * Create an user, with option to create super user.
-     */
-    protected function doExecute(): int
+    protected function executeForUsers(): string
     {
-        $input = $this->getInput();
-        $output = $this->getOutput();
-        $login = $input->getOption('login');
+        $login = $this->getLoginOfExistingUser();
 
-        $api = APIUsersManager::getInstance();
-        if ($api->userExists($login)) {
-                $api->setSuperUserAccess($login, true);
-        } else {
-            $output->writeln("<error>User $login does not exist.</error>");
-            exit;
-        }
-        $output->writeln("<info>User $login is now a super user.</info>");
-        return self::SUCCESS;
+        // On the command line there is no logged in user whose password could confirm this.
+        (new UserUpdater())->setSuperUserAccessWithoutCurrentPassword($login, 1);
+
+        return "User $login is now a super user.";
     }
 }
