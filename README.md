@@ -1,5 +1,9 @@
 # Matomo UserConsole Plugin
 
+[![PHPCS check](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/phpcs.yaml/badge.svg)](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/phpcs.yaml)
+[![Semgrep OSS scan](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/semgrep.yaml)
+[![Test plugin with Matomo](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/matomo.yaml/badge.svg)](https://github.com/Digitalist-Open-Cloud/Matomo-Plugin-UserConsole/actions/workflows/matomo.yaml)
+
 Manage Matomo users from the command line: create, invite, delete and list users, set their
 access and reset passwords.
 
