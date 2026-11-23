@@ -6,6 +6,7 @@ parameters:
     excludePaths:
         - tests/*
         - vue/*
+        - github-action-tests (?)
     bootstrapFiles:
         - ../../bootstrap-phpstan.php
     universalObjectCratesClasses:
