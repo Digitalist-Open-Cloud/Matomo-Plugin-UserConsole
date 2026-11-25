@@ -24,8 +24,8 @@ class ListUsers extends UserCommand
     {
         $users = APIUsersManager::getInstance()->getUsers();
 
-        if ($this->isJsonWanted()) {
-            return $this->toJson(array_map([$this, 'describeUser'], $users));
+        if ($this->isDataWanted()) {
+            return $this->toData(array_map([$this, 'describeUser'], $users));
         }
 
         $lines = [];

@@ -12,7 +12,10 @@ namespace Piwik\Plugins\UserConsole\Commands;
 use Piwik\Plugin\ConsoleCommand;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 use Piwik\Plugins\UsersManager\Model;
+use Piwik\Plugins\UsersManager\UsersManager;
+use Piwik\Plugins\UsersManager\UserUpdater;
 use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * A command that reads or changes users. It ends with a message and a failure code, without a
@@ -55,29 +58,35 @@ abstract class UserCommand extends ConsoleCommand
 
     protected function addFormatOption(): void
     {
-        $this->addRequiredValueOption('format', null, 'Output format: text or json', 'text');
+        $this->addRequiredValueOption('format', null, 'Output format: text, json or yaml', 'text');
     }
 
     /**
+     * @return bool whether the option --format asks for data instead of text
      * @throws \InvalidArgumentException if the option --format is not a known format
      */
-    protected function isJsonWanted(): bool
+    protected function isDataWanted(): bool
     {
         $format = $this->getInput()->getOption('format');
-        if (!in_array($format, ['text', 'json'], true)) {
-            throw new \InvalidArgumentException('The option --format has to be text or json.');
+        if (!in_array($format, ['text', 'json', 'yaml'], true)) {
+            throw new \InvalidArgumentException('The option --format has to be text, json or yaml.');
         }
 
-        return $format === 'json';
+        return $format !== 'text';
     }
 
     /**
      * @param array<mixed> $data
+     * @return string the data in the format of the option --format
      */
-    protected function toJson(array $data): string
+    protected function toData(array $data): string
     {
+        $text = $this->getInput()->getOption('format') === 'yaml'
+            ? rtrim(Yaml::dump($data, 4, 2))
+            : json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
         // Escaped, or the console would read "<...>" in a value as a style.
-        return OutputFormatter::escape(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        return OutputFormatter::escape($text);
     }
 
     /**
@@ -105,6 +114,43 @@ abstract class UserCommand extends ConsoleCommand
         }
 
         return array_values(array_filter(array_map('intval', explode(',', $sites))));
+    }
+
+    /**
+     * Changes what differs from the values given. A value that is null is left as it is.
+     *
+     * @return string what was changed, to tell the user
+     */
+    protected function updateUser(
+        string $login,
+        ?string $email,
+        #[\SensitiveParameter]
+        ?string $password,
+        ?bool $super
+    ): string {
+        $user = (new Model())->getUser($login);
+        $updater = new UserUpdater();
+        $changed = [];
+
+        if ($email !== null && mb_strtolower($email) !== mb_strtolower($user['email'])) {
+            // @phpstan-ignore-next-line Matomo documents the email as a boolean, but it is the new email
+            $updater->updateUserWithoutCurrentPassword($login, false, $email);
+            $changed[] = 'email';
+        }
+
+        // Only when it differs, as a new password logs the user out everywhere.
+        if ($password !== null && !password_verify(UsersManager::getPasswordHash($password), $user['password'])) {
+            // @phpstan-ignore-next-line Matomo documents the password as a boolean, but it is the new password
+            $updater->updateUserWithoutCurrentPassword($login, $password);
+            $changed[] = 'password';
+        }
+
+        if ($super !== null && $super !== ($user['superuser_access'] == 1)) {
+            $updater->setSuperUserAccessWithoutCurrentPassword($login, (int) $super);
+            $changed[] = 'super user access';
+        }
+
+        return $changed ? "User $login updated: " . implode(', ', $changed) : "User $login is already as asked for. Nothing was changed.";
     }
 
     /**

@@ -26,8 +26,8 @@ class ShowUser extends UserCommand
         $login = $this->getLoginOfExistingUser();
         $user = $this->describeUser(APIUsersManager::getInstance()->getUsers($login)[0]);
 
-        if ($this->isJsonWanted()) {
-            return $this->toJson($user);
+        if ($this->isDataWanted()) {
+            return $this->toData($user);
         }
 
         $accessPerSite = [];

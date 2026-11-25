@@ -10,9 +10,7 @@
 namespace Piwik\Plugins\UserConsole\Commands;
 
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
-use Piwik\Plugins\UsersManager\Model;
 use Piwik\Plugins\UsersManager\UserUpdater;
-use Piwik\Plugins\UsersManager\UsersManager;
 
 class CreateUser extends UserCommand
 {
@@ -35,7 +33,7 @@ class CreateUser extends UserCommand
 
         $api = APIUsersManager::getInstance();
         if ($this->getInput()->getOption('update') && $api->userExists($login)) {
-            return $this->update($login, $email, $password);
+            return $this->updateUser($login, $email, $password, (bool) $this->getInput()->getOption('super'));
         }
 
         if ($api->userExists($login) || $api->userEmailExists($email)) {
@@ -49,37 +47,5 @@ class CreateUser extends UserCommand
         }
 
         return "User $login created";
-    }
-
-    private function update(
-        string $login,
-        string $email,
-        #[\SensitiveParameter]
-        string $password
-    ): string {
-        $user = (new Model())->getUser($login);
-        $super = (bool) $this->getInput()->getOption('super');
-        $updater = new UserUpdater();
-        $changed = [];
-
-        if (mb_strtolower($email) !== mb_strtolower($user['email'])) {
-            // @phpstan-ignore-next-line Matomo documents the email as a boolean, but it is the new email
-            $updater->updateUserWithoutCurrentPassword($login, false, $email);
-            $changed[] = 'email';
-        }
-
-        // Only when it differs, as a new password logs the user out everywhere.
-        if (!password_verify(UsersManager::getPasswordHash($password), $user['password'])) {
-            // @phpstan-ignore-next-line Matomo documents the password as a boolean, but it is the new password
-            $updater->updateUserWithoutCurrentPassword($login, $password);
-            $changed[] = 'password';
-        }
-
-        if ($super !== ($user['superuser_access'] == 1)) {
-            $updater->setSuperUserAccessWithoutCurrentPassword($login, (int) $super);
-            $changed[] = 'super user access';
-        }
-
-        return $changed ? "User $login updated: " . implode(', ', $changed) : "User $login is already as asked for. Nothing was changed.";
     }
 }

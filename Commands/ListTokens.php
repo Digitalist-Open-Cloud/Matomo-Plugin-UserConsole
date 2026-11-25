@@ -28,8 +28,8 @@ class ListTokens extends UserCommand
 
         $tokens = (new Model())->getAllNonSystemTokensForLogin($login);
 
-        if ($this->isJsonWanted()) {
-            return $this->toJson(array_map(fn (array $token): array => [
+        if ($this->isDataWanted()) {
+            return $this->toData(array_map(fn (array $token): array => [
                 'id' => (int) $token['idusertokenauth'],
                 'description' => $token['description'],
                 'date_created' => $token['date_created'],
