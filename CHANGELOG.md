@@ -1,5 +1,11 @@
 # Change log
 
+## [5.0.9] - 2026-11-25
+
+### Fixed
+
+- `user:access` takes capabilities after the access level, as in `--access=write,tagmanager_publish_live_container`. A capability given alone is refused with a message that tells how to give it.
+
 ## [5.0.5] - 2026-11-21
 
 ### Security

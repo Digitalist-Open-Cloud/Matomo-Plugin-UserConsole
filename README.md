@@ -95,7 +95,14 @@ Options:
 
 * `login` User name for the user (required)
 * `sites` One or more site IDs, comma separated, that you would like to set the permission for, or `all` (required)
-* `access` Which access the user should have to the site - `noaccess`, `view`, `write`, `admin` (required)
+* `access` Which access the user should have to the site - `noaccess`, `view`, `write`, `admin` (required). Capabilities can follow the access level, comma separated.
+
+The access replaces what the user had on those sites, capabilities included. To give write
+access and a capability of the Tag Manager at once:
+
+    ./console user:access --login=anna --sites=1,2 --access=write,tagmanager_publish_live_container
+
+To add a capability to the access a user already has, use [user:capability](#usercapability).
 
 ### <a name="makesuper">user:make-super</a>
 

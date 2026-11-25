@@ -222,6 +222,35 @@ class CommandsTest extends ConsoleCommandTestCase
         $this->assertSame(['view', 'view'], array_column($access, 'access'));
     }
 
+    public function testAccessCanBeSetTogetherWithCapabilities()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'write, tagmanager_publish_live_container', '--sites' => '1']), $this->getDisplay());
+
+        $this->assertEqualsCanonicalizing(['write', 'tagmanager_publish_live_container'], $this->getAccess('anna', 1));
+    }
+
+    public function testAccessOfOnlyACapabilityFailsAndTellsHowToGiveIt()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'view', '--sites' => '1']);
+
+        $this->assertSame(1, $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'tagmanager_write', '--sites' => '1']));
+
+        $this->assertStringContainsString('user:capability', $this->getDisplay());
+        $this->assertEquals(['view'], $this->getAccess('anna', 1));
+    }
+
+    public function testAccessFailsForTwoLevelsAtOnce()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'view,write', '--sites' => '1']));
+
+        $this->assertSame([], $this->getAccess('anna', 1));
+    }
+
     public function testAccessFailsForALevelMatomoDoesNotKnow()
     {
         $this->addUser('anna');
