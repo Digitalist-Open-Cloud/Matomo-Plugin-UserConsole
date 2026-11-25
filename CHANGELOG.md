@@ -5,6 +5,7 @@
 ### Added
 
 - `user:update` takes `--password` and `--super=true|false` next to `--email`, and changes only what is given.
+- `--format=yaml` for `user:list`, `user:show` and `user:token-list`.
 
 ### Fixed
 

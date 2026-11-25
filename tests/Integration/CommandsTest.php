@@ -519,6 +519,21 @@ class CommandsTest extends ConsoleCommandTestCase
         $this->assertArrayNotHasKey('password', $users['anna']);
     }
 
+    public function testListAsYamlHasTheSameAsJson()
+    {
+        $this->addUser('anna');
+        $this->runCommand('user:access', ['--login' => 'anna', '--access' => 'write', '--sites' => '2']);
+        $this->runCommand('user:token-create', ['--login' => 'anna', '--description' => 'the <info>importer</info>: "x"']);
+
+        foreach (['user:list' => [], 'user:show' => ['--login' => 'anna'], 'user:token-list' => ['--login' => 'anna']] as $command => $options) {
+            $this->assertSame(0, $this->runCommand($command, $options + ['--format' => 'json']));
+            $json = json_decode($this->getDisplay(), true, 512, JSON_THROW_ON_ERROR);
+
+            $this->assertSame(0, $this->runCommand($command, $options + ['--format' => 'yaml']));
+            $this->assertSame($json, \Symfony\Component\Yaml\Yaml::parse($this->getDisplay()), $command);
+        }
+    }
+
     public function testListFailsForAFormatItDoesNotKnow()
     {
         $this->assertSame(1, $this->runCommand('user:list', ['--format' => 'xml']));

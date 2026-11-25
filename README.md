@@ -128,7 +128,7 @@ List all users.
 
 Options:
 
-* `format` `text` (default) or `json`. JSON has for every user the login, email, whether it is a super user, the invitation (`active`, `pending` or `expired`), when it was registered and last seen, and the access per website.
+* `format` `text` (default), `json` or `yaml`. JSON and YAML have for every user the login, email, whether it is a super user, the invitation (`active`, `pending` or `expired`), when it was registered and last seen, and the access per website.
 
 ### <a name="resetpassword">user:reset-password</a>
 
@@ -170,7 +170,7 @@ and the access and capabilities per website.
 Options:
 
 * `login` User name for the user (required)
-* `format` `text` (default) or `json`. JSON has the same fields as `user:list`.
+* `format` `text` (default), `json` or `yaml`, with the same fields as `user:list`.
 
 ### <a name="inviteresend">user:invite-resend</a>
 
@@ -216,7 +216,7 @@ Lists the API tokens of a user: ID, description, when it was created, last used 
 Options:
 
 * `login` User name for the user (required)
-* `format` `text` (default) or `json`
+* `format` `text` (default), `json` or `yaml`
 
 ### <a name="tokendelete">user:token-delete</a>
 
