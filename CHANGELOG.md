@@ -2,6 +2,10 @@
 
 ## [5.0.9] - 2026-11-25
 
+### Added
+
+- `user:update` takes `--password` and `--super=true|false` next to `--email`, and changes only what is given.
+
 ### Fixed
 
 - `user:access` takes capabilities after the access level, as in `--access=write,tagmanager_publish_live_container`. A capability given alone is refused with a message that tells how to give it.

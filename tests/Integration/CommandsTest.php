@@ -438,6 +438,53 @@ class CommandsTest extends ConsoleCommandTestCase
         $this->assertSame('anna@example.org', $this->getUser('anna')['email']);
     }
 
+    public function testUpdateChangesOnlyWhatWasGiven()
+    {
+        $this->addUser('anna');
+
+        $this->assertSame(0, $this->runCommand('user:update', ['--login' => 'anna', '--password' => 'another-long-secret-2']), $this->getDisplay());
+        $this->assertTrue($this->isPassword('anna', 'another-long-secret-2'));
+        $this->assertSame('anna@example.org', $this->getUser('anna')['email']);
+
+        $this->assertSame(0, $this->runCommand('user:update', ['--login' => 'anna', '--super' => 'true']), $this->getDisplay());
+        $this->assertSame('1', (string) $this->getUser('anna')['superuser_access']);
+
+        $this->assertSame(0, $this->runCommand('user:update', ['--login' => 'anna', '--email' => 'new@example.org', '--super' => 'false']), $this->getDisplay());
+        $user = $this->getUser('anna');
+        $this->assertSame(['new@example.org', '0'], [$user['email'], (string) $user['superuser_access']]);
+        $this->assertTrue($this->isPassword('anna', 'another-long-secret-2'));
+    }
+
+    /**
+     * @dataProvider getUpdatesThatAreRefused
+     */
+    public function testUpdateRefusesWhatItCanNotDo(array $options)
+    {
+        $this->addUser('anna');
+        $before = $this->getUser('anna');
+
+        $this->assertSame(1, $this->runCommand('user:update', ['--login' => 'anna'] + $options));
+
+        $this->assertSame($before, $this->getUser('anna'));
+    }
+
+    public function getUpdatesThatAreRefused(): array
+    {
+        return [
+            'nothing to change' => [[]],
+            'empty password' => [['--password' => '']],
+            'weak password' => [['--password' => 'abc']],
+            'super that is not true or false' => [['--super' => 'yes']],
+        ];
+    }
+
+    public function testUpdateLeavesTheLastSuperUserItsAccess()
+    {
+        $this->assertSame(1, $this->runCommand('user:update', ['--login' => Fixture::ADMIN_USER_LOGIN, '--super' => 'false']));
+
+        $this->assertSame('1', (string) $this->getUser(Fixture::ADMIN_USER_LOGIN)['superuser_access']);
+    }
+
     public function testLogoutEndsTheSessionsOfTheUserAndKeepsPasswordAndTokens()
     {
         $this->addUser('anna');

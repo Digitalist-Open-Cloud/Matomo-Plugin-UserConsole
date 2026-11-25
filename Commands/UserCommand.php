@@ -12,6 +12,8 @@ namespace Piwik\Plugins\UserConsole\Commands;
 use Piwik\Plugin\ConsoleCommand;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
 use Piwik\Plugins\UsersManager\Model;
+use Piwik\Plugins\UsersManager\UsersManager;
+use Piwik\Plugins\UsersManager\UserUpdater;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 
 /**
@@ -105,6 +107,43 @@ abstract class UserCommand extends ConsoleCommand
         }
 
         return array_values(array_filter(array_map('intval', explode(',', $sites))));
+    }
+
+    /**
+     * Changes what differs from the values given. A value that is null is left as it is.
+     *
+     * @return string what was changed, to tell the user
+     */
+    protected function updateUser(
+        string $login,
+        ?string $email,
+        #[\SensitiveParameter]
+        ?string $password,
+        ?bool $super
+    ): string {
+        $user = (new Model())->getUser($login);
+        $updater = new UserUpdater();
+        $changed = [];
+
+        if ($email !== null && mb_strtolower($email) !== mb_strtolower($user['email'])) {
+            // @phpstan-ignore-next-line Matomo documents the email as a boolean, but it is the new email
+            $updater->updateUserWithoutCurrentPassword($login, false, $email);
+            $changed[] = 'email';
+        }
+
+        // Only when it differs, as a new password logs the user out everywhere.
+        if ($password !== null && !password_verify(UsersManager::getPasswordHash($password), $user['password'])) {
+            // @phpstan-ignore-next-line Matomo documents the password as a boolean, but it is the new password
+            $updater->updateUserWithoutCurrentPassword($login, $password);
+            $changed[] = 'password';
+        }
+
+        if ($super !== null && $super !== ($user['superuser_access'] == 1)) {
+            $updater->setSuperUserAccessWithoutCurrentPassword($login, (int) $super);
+            $changed[] = 'super user access';
+        }
+
+        return $changed ? "User $login updated: " . implode(', ', $changed) : "User $login is already as asked for. Nothing was changed.";
     }
 
     /**
